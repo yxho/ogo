@@ -1,4 +1,4 @@
-package gee
+package ogo
 
 import "strings"
 
