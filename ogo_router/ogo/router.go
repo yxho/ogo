@@ -82,3 +82,13 @@ func (r *router) getRoute(method string, path string) (*node, map[string]string)
 
 	return nil, nil
 }
+
+func (r *router) getRoutes(method string) []*node {
+	root, ok := r.roots[method]
+	if !ok {
+		return nil
+	}
+	nodes := make([]*node, 0)
+	root.travel(&nodes)
+	return nodes
+}

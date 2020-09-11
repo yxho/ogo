@@ -78,3 +78,15 @@ func TestGetRoute2(t *testing.T) {
 	}
 
 }
+
+func TestGetRoutes(t *testing.T) {
+	r := newTestRouter()
+	nodes := r.getRoutes("GET")
+	for i, n := range nodes {
+		fmt.Println(i+1, n)
+	}
+
+	if len(nodes) != 5 {
+		t.Fatal("the number of routes shoule be 4")
+	}
+}
