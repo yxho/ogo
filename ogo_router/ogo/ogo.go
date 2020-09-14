@@ -4,6 +4,8 @@ import (
 	_ "fmt"
 	"log"
 	"net/http"
+	"strings"
+	"time"
 )
 
 //type HandlerFunc func(http.ResponseWriter, *http.Request)
@@ -20,6 +22,17 @@ type RouterGroup struct {
 	middlewares []HandlerFunc
 	parent      *RouterGroup
 	engine      *Engine
+}
+
+func Logger() HandlerFunc {
+	return func(c *Context) {
+		// Start timer
+		t := time.Now()
+		// Process request
+		c.Next()
+		// Calculate resolution time
+		log.Printf("[%d] %s in %v", c.StatusCode, c.Req.RequestURI, time.Since(t))
+	}
 }
 
 func New() *Engine {
@@ -40,6 +53,10 @@ func (group *RouterGroup) Group(prefix string) *RouterGroup {
 	}
 	engine.groups = append(engine.groups, newGroup)
 	return newGroup
+}
+
+func (group *RouterGroup) Use(middlewares ...HandlerFunc) {
+	group.middlewares = append(group.middlewares, middlewares...)
 }
 
 func (group *RouterGroup) addRoute(method string, comp string, handler HandlerFunc) {
@@ -73,6 +90,16 @@ func (engine *Engine) Run(addr string) (err error) {
 }
 
 func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	//c := newContext(w, req)
+	//engine.router.handle(c)
+
+	var middlewares []HandlerFunc
+	for _, group := range engine.groups {
+		if strings.HasPrefix(req.URL.Path, group.prefix) {
+			middlewares = append(middlewares, group.middlewares...)
+		}
+	}
 	c := newContext(w, req)
+	c.handlers = middlewares
 	engine.router.handle(c)
 }
